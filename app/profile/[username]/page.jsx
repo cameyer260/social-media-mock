@@ -112,7 +112,18 @@ export default function Page({ params }) {
                 </div>
             )}
             <div className="flex w-8/12 border-l-2 border-white h-screen">
-                <h1>hello</h1>
+                <div>
+                    TOP DIV HOLDING USER STUFF AND BIO
+                    <div>
+                        the actual bio
+                    </div>
+                </div>
+                <div>
+                    DIV HOLDING ALL THE POSTS
+                    <div>
+                        POST NUMBER 1
+                    </div>
+                </div>
             </div>
         </div>
     );
