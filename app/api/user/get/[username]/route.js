@@ -34,6 +34,7 @@ export async function GET(req, context) {
             profilePicURL: "idk how to do dis one yet",
             // check if the user is viewing their own page, if they are they have permission to edit things on it
             isEditable: (search._id.toString() === user._id.toString()) ? true : false, 
+            bio: search.bio,
         }
 
 
