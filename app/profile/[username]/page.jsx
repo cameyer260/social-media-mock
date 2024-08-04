@@ -12,7 +12,7 @@ export default function Page({ params }) {
     const { user, loading } = useGlobalContext();
 
     const [data, setData] = useState(null);
-    const [error, setError] = useState(false);
+    const [error, setError] = useState(null);
     // use state variable used to determine what will be displayed on the left side of the screen
     // it can be default, ownPage, following, followers, post (it will be set to the post object)
     const [leftSide, setLeftSide] = useState("default");
@@ -26,14 +26,13 @@ export default function Page({ params }) {
                 credentials: "include",
             });
             const result = await res.json();
-            if (result.data.isEditable) {
+            if(res.status !== 200) {
+                setError(result.message);
+            }
+            if (result.data?.isEditable) {
                 setLeftSide("ownPage");
             }
             setData(result.data);
-            if (res.status !== 200) {
-                alert(result.message);
-                setError(true);
-            }
             console.log(result); // set useState variable to data on success
 
             // now fetch profile picture
@@ -66,7 +65,7 @@ export default function Page({ params }) {
     if (error) {
         return (
             <div>
-                {data.message}
+                {error}
             </div>
         )
     }
@@ -111,15 +110,29 @@ export default function Page({ params }) {
                     post goes inside here (use a useState to hold what post to display)
                 </div>
             )}
-            <div className="flex w-8/12 border-l-2 border-white h-screen">
+            <div className="flex w-8/12 border-l-2 border-white h-screen flex-col">
                 <div>
-                    TOP DIV HOLDING USER STUFF AND BIO
+                    <div className="flex flex-row">
+                        <div>
+                            profile picture
+                        </div>
+                        <div className="flex flex-col">
+                            <h1>name</h1>
+                            <h1>username</h1> 
+                            <h1>email</h1>
+                        </div>
+                        <div className="flex flex-col">
+                            <h1>x posts</h1>
+                            <h1>x followers</h1>
+                            <h1>x following</h1>
+                        </div>
+                    </div>
                     <div>
-                        the actual bio
+                        bio
                     </div>
                 </div>
                 <div>
-                    DIV HOLDING ALL THE POSTS
+                    <h1>DIV HOLDING ALL THE POSTS</h1>
                     <div>
                         POST NUMBER 1
                     </div>

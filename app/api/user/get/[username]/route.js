@@ -49,7 +49,7 @@ export async function GET(req, context) {
 
         JWTErrors(error);
 
-        if(error.message === "User does not exists.") {
+        if(error.message === "User does not exist.") {
             return new Response(JSON.stringify({ message: "User does not exist." }), {
                 headers: {
                     "Content-Type": "application/json",
