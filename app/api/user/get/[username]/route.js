@@ -46,7 +46,7 @@ export async function GET(req, context) {
         });
 
     } catch (error) {
-        console.log(error);
+        //console.log(error);
 
         JWTErrors(error);
 

@@ -51,20 +51,20 @@ export default function Page({ params }) {
             setData(result.data);
             console.log(result); // set useState variable to data on success
 
-            // now fetch profile picture
-            const res2 = await fetch(
-                `/api/user/profilePicture/${params.username}`,
-                {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                }
-            );
-            const result2 = await res2.json();
-            console.log(result2);
-            if (res2.status === 200) {
-                setProfilePicUrl(result2.imgUrl);
-            } // else we leave it null
+            // // now fetch profile picture
+            // const res2 = await fetch(
+            //     `/api/user/profilePicture/${params.username}`,
+            //     {
+            //         method: "GET",
+            //         headers: { "Content-Type": "application/json" },
+            //         credentials: "include",
+            //     }
+            // );
+            // const result2 = await res2.json();
+            // console.log(result2);
+            // if (res2.status === 200) {
+            //     setProfilePicUrl(result2.imgUrl);
+            // } // else we leave it null
         };
 
         try {
@@ -73,7 +73,7 @@ export default function Page({ params }) {
             //alert(error);
             console.log(error);
         }
-    }, []);
+    }, [changeName, changeBio, changeProfilePic]);
 
     const startConvo = async () => {
         // makes post request to /api/user/messageLog/create, then forwards user to messages page if creation was successful
@@ -83,9 +83,35 @@ export default function Page({ params }) {
         // makes post request to posts api
     };
 
-    const submitName = async () => {};
+    const submitName = async (e) => {
+        e.preventDefault();
+        const res = await fetch("/api/user/name", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ first: first, last: last }),
+            credentials: "include",
+        });
+        const result = await res.json();
+        if(res.status !== 200) {
+            console.log(result.message);
+        }
+        setChangeName(false);
+    };
 
-    const submitBio = async () => {};
+    const submitBio = async (e) => {
+        e.preventDefault();
+        const res = await fetch("/api/user/bio", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json"},
+            body: JSON.stringify({ bio: bio }),
+            credentials: "include",
+        });
+        const result = await res.json();
+        if(res.status !== 200) {
+            console.log(result.message);
+        }
+        setChangeBio(false);
+    };
 
     if (loading) {
         return <Loading />;
@@ -179,7 +205,7 @@ export default function Page({ params }) {
                             <div className="flex flex-col">
                                 <h1>
                                     {changeName ? (
-                                        <form onSubmit={submitName}>
+                                        <form onSubmit={submitName} className="flex flex-row space-x-2">
                                             <input
                                                 type="text"
                                                 id="first"
@@ -188,7 +214,7 @@ export default function Page({ params }) {
                                                     setFirst(e.target.value)
                                                 }
                                                 value={first}
-                                                className=""
+                                                className="border rounded-lg pl-2 text-black"
                                             />
                                             <input
                                                 type="text"
@@ -198,7 +224,7 @@ export default function Page({ params }) {
                                                     setLast(e.target.value)
                                                 }
                                                 value={last}
-                                                className=""
+                                                className="border rounded-lg pl-2 text-black"
                                             />
                                             <button
                                                 className=""
@@ -245,14 +271,14 @@ export default function Page({ params }) {
                         </div>
                         <div className="border-b-2 py-4 px-10">
                             {changeBio ? (
-                                <form onSubmit={submitBio}>
+                                <form onSubmit={submitBio} className="flex flex-row space-x-2">
                                     <input
                                         type="text"
                                         id="bio"
                                         placeholder="bio"
                                         onChange={(e) => setBio(e.target.value)}
                                         value={bio}
-                                        className=""
+                                        className="border rounded-lg px-2 text-black"
                                     />
                                     <button
                                         onClick={() => setChangeBio(!changeBio)}

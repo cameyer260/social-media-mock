@@ -83,7 +83,7 @@ export async function GET(req, params) {
         // if found we then return it in the response
         return new Response(JSON.stringify({ message: "Success.", imgUrl: profilePic.imageUrl }))
     } catch (error) {
-        console.log(error);
+        //console.log(error);
 
         JWTErrors(error);
 
