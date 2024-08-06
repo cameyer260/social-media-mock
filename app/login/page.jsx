@@ -15,11 +15,11 @@ export default function LoginPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email, password: password }),
-            credentials: 'include'
-        })
+            credentials: "include",
+        });
         const result = await res.json();
         console.log(result);
-        if(res.ok && res.status === 200) {
+        if (res.ok && res.status === 200) {
             router.push("/");
         }
     };
@@ -57,7 +57,12 @@ export default function LoginPage() {
                     </button>
                 </div>
                 <div className="flex">
-                    <h4>Don't have an account? <Link href="/signup" className="text-sky-400 underline">Sign up.</Link></h4>
+                    <h4>
+                        Don't have an account?{" "}
+                        <Link href="/signup" className="text-sky-400 underline">
+                            Sign up.
+                        </Link>
+                    </h4>
                 </div>
             </form>
         </div>

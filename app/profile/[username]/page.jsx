@@ -33,6 +33,9 @@ export default function Page({ params }) {
     const [last, setLast] = useState("");
     const [bio, setBio] = useState("");
 
+    // image file useState for uploading profile pic
+    const [profilePicture, setProfilePicture] = useState(null);
+
     useEffect(() => {
         // fetch data about the user (name, following, etc...)
         const fetchData = async () => {
@@ -51,20 +54,20 @@ export default function Page({ params }) {
             setData(result.data);
             console.log(result); // set useState variable to data on success
 
-            // // now fetch profile picture
-            // const res2 = await fetch(
-            //     `/api/user/profilePicture/${params.username}`,
-            //     {
-            //         method: "GET",
-            //         headers: { "Content-Type": "application/json" },
-            //         credentials: "include",
-            //     }
-            // );
-            // const result2 = await res2.json();
-            // console.log(result2);
-            // if (res2.status === 200) {
-            //     setProfilePicUrl(result2.imgUrl);
-            // } // else we leave it null
+            // now fetch profile picture
+            const res2 = await fetch(
+                `/api/user/profilePicture/${params.username}`,
+                {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                }
+            );
+            const result2 = await res2.json();
+            console.log(result2);
+            if (res2.status === 200) {
+                setProfilePicUrl(result2.imgUrl);
+            } // else we leave it null
         };
 
         try {
@@ -92,7 +95,7 @@ export default function Page({ params }) {
             credentials: "include",
         });
         const result = await res.json();
-        if(res.status !== 200) {
+        if (res.status !== 200) {
             console.log(result.message);
         }
         setChangeName(false);
@@ -102,15 +105,32 @@ export default function Page({ params }) {
         e.preventDefault();
         const res = await fetch("/api/user/bio", {
             method: "PATCH",
-            headers: { "Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ bio: bio }),
+            credentials: "include",
+        });
+        const result = await res.json();
+        if (res.status !== 200) {
+            console.log(result.message);
+        }
+        setChangeBio(false);
+    };
+
+    const submitProfilePicture = async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('image', profilePicture);
+        const res = await fetch("/api/user/profilePicture", {
+            method: "POST",
+            headers: { "Content-Type": "multipart/form-data" },
+            body: formData,
             credentials: "include",
         });
         const result = await res.json();
         if(res.status !== 200) {
             console.log(result.message);
         }
-        setChangeBio(false);
+        setChangeProfilePic(false);
     };
 
     if (loading) {
@@ -180,6 +200,7 @@ export default function Page({ params }) {
                     display)
                 </div>
             )}
+
             {data?.isEditable ? (
                 <div className="flex w-8/12 border-l-2 border-white h-screen flex-col">
                     <div>
@@ -205,7 +226,10 @@ export default function Page({ params }) {
                             <div className="flex flex-col">
                                 <h1>
                                     {changeName ? (
-                                        <form onSubmit={submitName} className="flex flex-row space-x-2">
+                                        <form
+                                            onSubmit={submitName}
+                                            className="flex flex-row space-x-2"
+                                        >
                                             <input
                                                 type="text"
                                                 id="first"
@@ -271,7 +295,10 @@ export default function Page({ params }) {
                         </div>
                         <div className="border-b-2 py-4 px-10">
                             {changeBio ? (
-                                <form onSubmit={submitBio} className="flex flex-row space-x-2">
+                                <form
+                                    onSubmit={submitBio}
+                                    className="flex flex-row space-x-2"
+                                >
                                     <input
                                         type="text"
                                         id="bio"
@@ -304,6 +331,42 @@ export default function Page({ params }) {
                         <h1>DIV HOLDING ALL THE POSTS</h1>
                         <div>POST NUMBER 1</div>
                     </div>
+                    {changeProfilePic && (
+                        <div className="absolute bg-black w-1/3 h-1/4 border-2 border-white rounded-lg top-1/3">
+                            <form
+                                onSubmit={submitProfilePicture}
+                                className="flex flex-col w-full h-full"
+                                encType="multipart/form-data"
+                            >
+                                <div className="flex flex-row w-full border-b-2 border-white px-2">
+                                    <h1>Upload New Profile Picture</h1>
+                                    <button
+                                        className="ml-auto"
+                                        onClick={() =>
+                                            setChangeProfilePic(false)
+                                        }
+                                    >
+                                        Exit
+                                    </button>
+                                </div>
+                                <div className="p-2">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                            setProfilePicture(e.target.files[0])
+                                        }
+                                    />
+                                    <button
+                                        className="ml-auto border-2 border-white px-2 rounded-lg"
+                                        type="submit"
+                                    >
+                                        Submit
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="flex w-8/12 border-l-2 border-white h-screen flex-col">
