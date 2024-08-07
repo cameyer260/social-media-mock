@@ -3,7 +3,9 @@ import s3 from "../../../../lib/db/awsConnect.js";
 import VerifyUser from "../../reusuableMethods/verifyUser.js";
 import JWTErrors from "../../reusuableMethods/jwtErrors.js";
 const multer = require("multer");
-const upload = multer({ dest: "memory" }); // have multer store the uploaded file in server memory (ram)
+// save file in ram
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 export async function POST(req) {
     // upload new profile picture
@@ -15,8 +17,6 @@ export async function POST(req) {
             throw new Error();
         }
         upload.single('image'); // tells multer we are expect one image file called image, it will throw an error if this is not the case
-
-        const imageFile = req.file;
 
         // first check if user already has a profile picture uploaded
         const searchParams = {
@@ -39,7 +39,7 @@ export async function POST(req) {
             const params = {
                 Bucket: "cmeyerbucket",
                 Key: user.username,
-                Body: imageFile,
+                Body: req.file,
             };
             await s3.putObject(params).promise();
         }
