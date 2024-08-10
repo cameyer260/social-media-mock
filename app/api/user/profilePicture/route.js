@@ -12,6 +12,12 @@ const s3 = new S3Client({
     region: process.env.AWS_REGION,
 });
 
+// mutler stuff
+const multer = require("multer");
+// save file in ram
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
 export async function POST(req) {
     // upload new profile picture
     try {
@@ -22,13 +28,22 @@ export async function POST(req) {
             throw new Error();
         }
 
+        upload.single('image')(req, new Response(), (err) => {
+            if(err) {
+                throw err;
+            }
+        });
+
+        // if no error is thrown, the file has been processed by multer and we can move on to storing it
         const params = {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
+            Body: req.buffer,
+            ContentType: req.mimetype,
         }
         const command = new PutObjectCommand(params);
+
+        await s3.send(command);
 
         return new Response(
             JSON.stringify({ message: "Successfully uploaded picture." }),

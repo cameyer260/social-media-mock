@@ -12,9 +12,9 @@ export async function GET(req, context) {
             throw new Error();
         }
 
+
         
-        
-        return new Response(JSON.stringify({ message: "Success.", url: preSignedUrl }), {
+        return new Response(JSON.stringify({ message: "Success." }), {
             headers: {
                 "Content-Type": "application/json",
             },
