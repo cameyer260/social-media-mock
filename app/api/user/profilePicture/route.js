@@ -1,7 +1,7 @@
 import dbConnect from "../../../../lib/db/mongodb.js";
 import VerifyUser from "../../reusuableMethods/verifyUser.js";
 import JWTErrors from "../../reusuableMethods/jwtErrors.js";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 
 // aws s3 stuff
 const s3 = new S3Client({
@@ -34,16 +34,37 @@ export async function POST(req) {
             }
         });
 
-        // if no error is thrown, the file has been processed by multer and we can move on to storing it
-        const params = {
+        // first we want to check if they already have a profile pic, if so we want to delete it before storing a new one
+        const checkParams = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: user._id.toString(),
+        }
+        const checkCommand = new HeadObjectCommand(checkParams);
+        try {
+            await s3.send(checkCommand);
+            // if we are at this line of code, the image exists and needs to be deleted
+            const deleteParams = {
+                Bucket: process.env.BUCKET_NAME,
+                Key: user._id.toString(),
+            }
+            const deleteCommand = new DeleteObjectCommand(deleteParams);
+            await s3.send(deleteCommand);
+        } catch(er) {
+            if(er.name !== "NotFound") {
+                throw new Error("Error checking if image already exists.");
+            }
+        }
+
+        // now we can store the new one
+        const uploadParams = {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
             Body: req.buffer,
             ContentType: req.mimetype,
         }
-        const command = new PutObjectCommand(params);
+        const uploadCommand = new PutObjectCommand(uploadParams);
 
-        await s3.send(command);
+        await s3.send(uploadCommand);
 
         return new Response(
             JSON.stringify({ message: "Successfully uploaded picture." }),
@@ -73,4 +94,43 @@ export async function POST(req) {
 
 export async function DELETE(req) {
     // removes profile picture, we display default user icon instead
+    try {
+        await dbConnect();
+        // first authorization (only your account can upload your profile picture)
+        const user = await VerifyUser();
+        if (!user) {
+            throw new Error();
+        }
+
+        const params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: user._id.toString(),
+        }
+        const command = new DeleteObjectCommand(params);
+        await s3.send(command);
+
+        return new Response(
+            JSON.stringify({ message: "Successfully removed profile picture." }),
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                status: 200,
+            }
+        );
+    } catch(error) {
+        console.log(error);
+
+        JWTErrors(error);
+
+        return new Response(
+            JSON.stringify({ message: "Internal server error." }),
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                status: 500,
+            }
+        );
+    }
 }
