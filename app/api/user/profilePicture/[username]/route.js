@@ -7,7 +7,7 @@ import {
     GetObjectCommand,
     HeadObjectCommand,
 } from "@aws-sdk/client-s3";
-const { getSignedUrl } = "aws-sdk/s3-request-presigner";
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 // aws s3 stuff
 const s3 = new S3Client({
