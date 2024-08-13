@@ -1,7 +1,12 @@
 import dbConnect from "../../../../lib/db/mongodb.js";
 import VerifyUser from "../../reusuableMethods/verifyUser.js";
 import JWTErrors from "../../reusuableMethods/jwtErrors.js";
-import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import {
+    S3Client,
+    PutObjectCommand,
+    DeleteObjectCommand,
+    HeadObjectCommand,
+} from "@aws-sdk/client-s3";
 
 // aws s3 stuff
 const s3 = new S3Client({
@@ -12,11 +17,11 @@ const s3 = new S3Client({
     region: process.env.AWS_REGION,
 });
 
-// mutler stuff
-const multer = require("multer");
-// save file in ram
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+export const config = {
+    api: {
+        bodyParser: false, // Disable Next.js body parsing, we will handle it manually
+    },
+};
 
 export async function POST(req) {
     // upload new profile picture
@@ -28,40 +33,47 @@ export async function POST(req) {
             throw new Error();
         }
 
-        upload.single('image')(req, new Response(), (err) => {
-            if(err) {
-                throw err;
-            }
-        });
+        // // first we want to check if they already have a profile pic, if so we want to delete it before storing a new one
+        // const checkParams = {
+        //     Bucket: process.env.BUCKET_NAME,
+        //     Key: user._id.toString(),
+        // }
+        // const checkCommand = new HeadObjectCommand(checkParams);
+        // try {
+        //     await s3.send(checkCommand);
+        //     // if we are at this line of code, the image exists and needs to be deleted
+        //     const deleteParams = {
+        //         Bucket: process.env.BUCKET_NAME,
+        //         Key: user._id.toString(),
+        //     }
+        //     const deleteCommand = new DeleteObjectCommand(deleteParams);
+        //     await s3.send(deleteCommand);
+        // } catch(er) {
+        //     if(er.name !== "NotFound") {
+        //         throw er;
+        //     }
+        // }
 
-        // first we want to check if they already have a profile pic, if so we want to delete it before storing a new one
-        const checkParams = {
-            Bucket: process.env.BUCKET_NAME,
-            Key: user._id.toString(),
+        const formData = await req.formData();
+        console.log(formData);
+        const file = formData.get("image");
+        console.log(file);
+
+        if(!file) {
+            throw new Error("Error receiving image file from the request.");
         }
-        const checkCommand = new HeadObjectCommand(checkParams);
-        try {
-            await s3.send(checkCommand);
-            // if we are at this line of code, the image exists and needs to be deleted
-            const deleteParams = {
-                Bucket: process.env.BUCKET_NAME,
-                Key: user._id.toString(),
-            }
-            const deleteCommand = new DeleteObjectCommand(deleteParams);
-            await s3.send(deleteCommand);
-        } catch(er) {
-            if(er.name !== "NotFound") {
-                throw new Error("Error checking if image already exists.");
-            }
-        }
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        console.log(buffer);
+        console.log(file.type);
 
         // now we can store the new one
         const uploadParams = {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
-            Body: req.buffer,
-            ContentType: req.mimetype,
-        }
+            Body: buffer,
+            ContentType: file.type,
+        };
         const uploadCommand = new PutObjectCommand(uploadParams);
 
         await s3.send(uploadCommand);
@@ -105,12 +117,14 @@ export async function DELETE(req) {
         const params = {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
-        }
+        };
         const command = new DeleteObjectCommand(params);
         await s3.send(command);
 
         return new Response(
-            JSON.stringify({ message: "Successfully removed profile picture." }),
+            JSON.stringify({
+                message: "Successfully removed profile picture.",
+            }),
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -118,7 +132,7 @@ export async function DELETE(req) {
                 status: 200,
             }
         );
-    } catch(error) {
+    } catch (error) {
         console.log(error);
 
         JWTErrors(error);

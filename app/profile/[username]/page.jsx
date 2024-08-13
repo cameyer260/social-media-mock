@@ -122,7 +122,6 @@ export default function Page({ params }) {
         formData.append('image', profilePicture);
         const res = await fetch("/api/user/profilePicture", {
             method: "POST",
-            headers: { "Content-Type": "multipart/form-data" },
             body: formData,
             credentials: "include",
         });

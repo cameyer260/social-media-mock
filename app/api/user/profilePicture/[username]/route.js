@@ -37,19 +37,23 @@ export async function GET(req, context) {
             );
         }
 
-        // then we check if the profile picture does not exist (user doesnt have profile picture)
-        const checkParams = {
-            Bucket: process.env.BUCKET_NAME,
-            Key: otherUser._id.toString(),
-        };
-        const checkCommand = new HeadObjectCommand(checkParams);
-        try {
-            await s3.send(checkCommand);
-        } catch (er) {
-            if (er.name === "NotFound") {
-                throw new Error("User does not have a profile picture.");
-            } else throw er;
-        }
+        // // then we check if the profile picture does not exist (user doesnt have profile picture)
+        // const checkParams = {
+        //     Bucket: process.env.BUCKET_NAME,
+        //     Key: otherUser._id.toString(),
+        // };
+        // const checkCommand = new HeadObjectCommand(checkParams);
+        // try {
+        //     await s3.send(checkCommand);
+        // } catch (er) {
+        //     if (er.name === "NoSuchKey" || er.$metadata?.httpStatusCode === 404) {
+        //         // Handle the case where the profile picture does not exist.
+        //         throw new Error("User does not have a profile picture.");
+        //     } else {
+        //         // Re-throw other errors for further handling.
+        //         throw er;
+        //     }
+        // }
 
         // if no error has been thrown we successfully verified that the user has a profile picture
         // this is done so that the presigned url actually leads to an image and not an access denied/not found page
