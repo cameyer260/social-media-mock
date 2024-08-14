@@ -66,7 +66,8 @@ export default function Page({ params }) {
             const result2 = await res2.json();
             console.log(result2);
             if (res2.status === 200) {
-                setProfilePicUrl(result2.imgUrl);
+                console.log("hi");
+                setProfilePicUrl(result2.signedUrl);
             } // else we leave it null
         };
 
@@ -119,17 +120,29 @@ export default function Page({ params }) {
     const submitProfilePicture = async (e) => {
         e.preventDefault();
         const formData = new FormData();
-        formData.append('image', profilePicture);
+        formData.append("image", profilePicture);
         const res = await fetch("/api/user/profilePicture", {
             method: "POST",
             body: formData,
             credentials: "include",
         });
         const result = await res.json();
-        if(res.status !== 200) {
+        if (res.status !== 200) {
             console.log(result.message);
         }
         setChangeProfilePic(false);
+    };
+
+    const removeProfilePicture = async () => {
+        const res = await fetch("/api/user/profilePicture", {
+            method: "DELETE",
+            credentials: "include",
+        });
+        const result = await res.json();
+        if (res.status !== 200) {
+            console.log(result.message);
+        }
+        setChangeProfilePic(!changeProfilePic);
     };
 
     if (loading) {
@@ -204,24 +217,24 @@ export default function Page({ params }) {
                 <div className="flex w-8/12 border-l-2 border-white h-screen flex-col">
                     <div>
                         <div className="flex flex-row space-x-20 pl-10 pt-5">
-                            <div className="border-2 border-white rounded-full p-2">
-                                <button
-                                    onClick={() =>
-                                        setChangeProfilePic(!changeProfilePic)
-                                    }
-                                >
-                                    {profilePicUrl ? (
-                                        <Image
-                                            src={profilePicUrl}
-                                            alt="profile-pic"
-                                            height={75}
-                                            width={75}
-                                        ></Image>
-                                    ) : (
-                                        <WhiteProfileIcon />
-                                    )}
-                                </button>
-                            </div>
+                            <button
+                                onClick={() =>
+                                    setChangeProfilePic(!changeProfilePic)
+                                }
+                                className="border-2 border-white rounded-full overflow-hidden"
+                            >
+                                {profilePicUrl ? (
+                                    <Image
+                                        src={profilePicUrl}
+                                        alt="profile-pic"
+                                        height={75}
+                                        width={75}
+                                        className="object-cover rounded-full w-20 h-20"
+                                    ></Image>
+                                ) : (
+                                    <WhiteProfileIcon />
+                                )}
+                            </button>
                             <div className="flex flex-col">
                                 <h1>
                                     {changeName ? (
@@ -361,6 +374,14 @@ export default function Page({ params }) {
                                         type="submit"
                                     >
                                         Submit
+                                    </button>
+                                </div>
+                                <div>
+                                    <button
+                                        className="ml-2 border-2 border-white px-2 rounded-lg"
+                                        onClick={removeProfilePicture}
+                                    >
+                                        Remove Profile Picture
                                     </button>
                                 </div>
                             </form>

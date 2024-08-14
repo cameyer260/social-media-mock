@@ -5,7 +5,7 @@ import {
     S3Client,
     PutObjectCommand,
     DeleteObjectCommand,
-    HeadObjectCommand,
+    Type,
 } from "@aws-sdk/client-s3";
 
 // aws s3 stuff
@@ -33,31 +33,8 @@ export async function POST(req) {
             throw new Error();
         }
 
-        // // first we want to check if they already have a profile pic, if so we want to delete it before storing a new one
-        // const checkParams = {
-        //     Bucket: process.env.BUCKET_NAME,
-        //     Key: user._id.toString(),
-        // }
-        // const checkCommand = new HeadObjectCommand(checkParams);
-        // try {
-        //     await s3.send(checkCommand);
-        //     // if we are at this line of code, the image exists and needs to be deleted
-        //     const deleteParams = {
-        //         Bucket: process.env.BUCKET_NAME,
-        //         Key: user._id.toString(),
-        //     }
-        //     const deleteCommand = new DeleteObjectCommand(deleteParams);
-        //     await s3.send(deleteCommand);
-        // } catch(er) {
-        //     if(er.name !== "NotFound") {
-        //         throw er;
-        //     }
-        // }
-
         const formData = await req.formData();
-        console.log(formData);
         const file = formData.get("image");
-        console.log(file);
 
         if(!file) {
             throw new Error("Error receiving image file from the request.");
@@ -72,7 +49,6 @@ export async function POST(req) {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
             Body: buffer,
-            ContentType: file.type,
         };
         const uploadCommand = new PutObjectCommand(uploadParams);
 
@@ -114,6 +90,7 @@ export async function DELETE(req) {
             throw new Error();
         }
 
+        // then we remove their profile picture from the aws bucket
         const params = {
             Bucket: process.env.BUCKET_NAME,
             Key: user._id.toString(),
