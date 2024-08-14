@@ -36,6 +36,8 @@ export default function Page({ params }) {
     // image file useState for uploading profile pic
     const [profilePicture, setProfilePicture] = useState(null);
 
+    const [triggerFetch, setTriggerFetch] = useState(false);
+
     useEffect(() => {
         // fetch data about the user (name, following, etc...)
         const fetchData = async () => {
@@ -66,7 +68,6 @@ export default function Page({ params }) {
             const result2 = await res2.json();
             console.log(result2);
             if (res2.status === 200) {
-                console.log("hi");
                 setProfilePicUrl(result2.signedUrl);
             } // else we leave it null
         };
@@ -77,7 +78,7 @@ export default function Page({ params }) {
             //alert(error);
             console.log(error);
         }
-    }, [changeName, changeBio, changeProfilePic]);
+    }, [triggerFetch]);
 
     const startConvo = async () => {
         // makes post request to /api/user/messageLog/create, then forwards user to messages page if creation was successful
@@ -100,6 +101,7 @@ export default function Page({ params }) {
             console.log(result.message);
         }
         setChangeName(false);
+        setTriggerFetch(!triggerFetch);
     };
 
     const submitBio = async (e) => {
@@ -115,6 +117,7 @@ export default function Page({ params }) {
             console.log(result.message);
         }
         setChangeBio(false);
+        setTriggerFetch(!triggerFetch);
     };
 
     const submitProfilePicture = async (e) => {
@@ -131,6 +134,7 @@ export default function Page({ params }) {
             console.log(result.message);
         }
         setChangeProfilePic(false);
+        setTriggerFetch(!triggerFetch);
     };
 
     const removeProfilePicture = async () => {
@@ -143,6 +147,7 @@ export default function Page({ params }) {
             console.log(result.message);
         }
         setChangeProfilePic(!changeProfilePic);
+        setTriggerFetch(!triggerFetch);
     };
 
     if (loading) {
@@ -230,6 +235,7 @@ export default function Page({ params }) {
                                         height={75}
                                         width={75}
                                         className="object-cover rounded-full w-20 h-20"
+                                        onError={() => setProfilePicUrl(null)}
                                     ></Image>
                                 ) : (
                                     <WhiteProfileIcon />
@@ -289,20 +295,34 @@ export default function Page({ params }) {
                                 <h1>{data?.username}</h1>
                                 <h1>{data?.email}</h1>
                             </div>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col justify-start">
                                 <h1>x posts</h1>
-                                <h1>
+                                <button
+                                    onClick={() => {
+                                        if (leftSide === "followers") {
+                                            setLeftSide("default");
+                                        } else setLeftSide("followers");
+                                    }}
+                                    className="text-left"
+                                >
                                     {data?.followers
                                         ? data.followers.length
                                         : 0}{" "}
                                     followers
-                                </h1>
-                                <h1>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (leftSide === "following") {
+                                            setLeftSide("default");
+                                        } else setLeftSide("following");
+                                    }}
+                                    className="text-left"
+                                >
                                     {data?.following
                                         ? data.following.length
                                         : 0}{" "}
                                     following
-                                </h1>
+                                </button>
                             </div>
                         </div>
                         <div className="border-b-2 py-4 px-10">
@@ -415,18 +435,26 @@ export default function Page({ params }) {
                             </div>
                             <div className="flex flex-col">
                                 <h1>x posts</h1>
-                                <h1>
+                                <button onClick={() => {
+                                    if(leftSide === "followers") {
+                                        setLeftSide("default");
+                                    } else setLeftSide("followers");
+                                }}>
                                     {data?.followers
                                         ? data.followers.length
                                         : 0}{" "}
                                     followers
-                                </h1>
-                                <h1>
+                                </button>
+                                <button onClick={() => {
+                                    if(leftSide === "following") {
+                                        setLeftSide("default");
+                                    } else setLeftSide("following");
+                                }}>
                                     {data?.following
                                         ? data.following.length
                                         : 0}{" "}
                                     following
-                                </h1>
+                                </button>
                             </div>
                         </div>
                         <div className="border-b-2 py-4 px-10">
