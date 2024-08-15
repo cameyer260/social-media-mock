@@ -22,11 +22,14 @@ export default function Page({ params }) {
     const [profilePicUrl, setProfilePicUrl] = useState(null);
 
     // 3 use states for editing the profile picture, name, and bio
-    // name and bio being true just turns thier tags into forms that can be edited then submitted
+    // name and bio being true just turns their tags into forms that can be edited then submitted
     // profile picture opens a pop up that allows the user to upload their file picture
     const [changeName, setChangeName] = useState(false);
     const [changeBio, setChangeBio] = useState(false);
     const [changeProfilePic, setChangeProfilePic] = useState(false);
+
+    // another use state variable, this one for uploading a new post
+    const [newPostPopup, setNewPostPopup] = useState(false);
 
     // values for the changeName and changeBio forms
     const [first, setFirst] = useState("");
@@ -36,7 +39,13 @@ export default function Page({ params }) {
     // image file useState for uploading profile pic
     const [profilePicture, setProfilePicture] = useState(null);
 
+    // useState bool variable set in instances where we want to refetch the data to display on the page
+    // set in all submit forms functions (where we want the data refetched)
     const [triggerFetch, setTriggerFetch] = useState(false);
+
+    // post useState
+    const [postPicture, setPostPicture] = useState(null);
+    const [postCaption, setPostCaption] = useState("");
 
     useEffect(() => {
         // fetch data about the user (name, following, etc...)
@@ -84,7 +93,7 @@ export default function Page({ params }) {
         // makes post request to /api/user/messageLog/create, then forwards user to messages page if creation was successful
     };
 
-    const createPost = async () => {
+    const submitPost = async () => {
         // makes post request to posts api
     };
 
@@ -182,7 +191,15 @@ export default function Page({ params }) {
                 <div className="flex w-4/12 items-center justify-center">
                     <button
                         className="flex items-center justify-center flex-col"
-                        onClick={createPost}
+                        onClick={() => {
+                            if (
+                                newPostPopup === false &&
+                                changeProfilePic === true
+                            ) {
+                                setChangeProfilePic(false);
+                            }
+                            setNewPostPopup(!newPostPopup);
+                        }}
                     >
                         <NewPostIcon />
                         <p>Create a new post?</p>
@@ -223,9 +240,15 @@ export default function Page({ params }) {
                     <div>
                         <div className="flex flex-row space-x-20 pl-10 pt-5">
                             <button
-                                onClick={() =>
-                                    setChangeProfilePic(!changeProfilePic)
-                                }
+                                onClick={() => {
+                                    if (
+                                        changeProfilePic === false &&
+                                        newPostPopup === true
+                                    ) {
+                                        setNewPostPopup(false);
+                                    }
+                                    setChangeProfilePic(!changeProfilePic);
+                                }}
                                 className="border-2 border-white rounded-full overflow-hidden"
                             >
                                 {profilePicUrl ? (
@@ -407,6 +430,51 @@ export default function Page({ params }) {
                             </form>
                         </div>
                     )}
+                    {newPostPopup && (
+                        <div className="absolute bg-black w-1/3 h-1/4 border-2 border-white rounded-lg top-1/3">
+                            <form
+                                onSubmit={submitPost}
+                                className="flex flex-col w-full h-full"
+                                encType="multipart/form-data"
+                            >
+                                <div className="flex flex-row w-full border-b-2 border-white px-2">
+                                    <h1>Create New Post</h1>
+                                    <button
+                                        className="ml-auto"
+                                        onClick={() => setNewPostPopup(false)}
+                                    >
+                                        Exit
+                                    </button>
+                                </div>
+                                <div className="p-2">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) =>
+                                            setPostPicture(e.target.files[0])
+                                        }
+                                    />
+                                    <button
+                                        className="ml-auto border-2 border-white px-2 rounded-lg"
+                                        type="submit"
+                                    >
+                                        Submit
+                                    </button>
+                                </div>
+                                <div>
+                                    <input
+                                        type="text"
+                                        onChange={(e) =>
+                                            setPostCaption(e.target.value)
+                                        }
+                                        value={postCaption}
+                                        placeholder="Add a bio here."
+                                        className="rounded-lg ml-2 text-black pl-2"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="flex w-8/12 border-l-2 border-white h-screen flex-col">
@@ -435,21 +503,25 @@ export default function Page({ params }) {
                             </div>
                             <div className="flex flex-col">
                                 <h1>x posts</h1>
-                                <button onClick={() => {
-                                    if(leftSide === "followers") {
-                                        setLeftSide("default");
-                                    } else setLeftSide("followers");
-                                }}>
+                                <button
+                                    onClick={() => {
+                                        if (leftSide === "followers") {
+                                            setLeftSide("default");
+                                        } else setLeftSide("followers");
+                                    }}
+                                >
                                     {data?.followers
                                         ? data.followers.length
                                         : 0}{" "}
                                     followers
                                 </button>
-                                <button onClick={() => {
-                                    if(leftSide === "following") {
-                                        setLeftSide("default");
-                                    } else setLeftSide("following");
-                                }}>
+                                <button
+                                    onClick={() => {
+                                        if (leftSide === "following") {
+                                            setLeftSide("default");
+                                        } else setLeftSide("following");
+                                    }}
+                                >
                                     {data?.following
                                         ? data.following.length
                                         : 0}{" "}
