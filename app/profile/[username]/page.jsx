@@ -43,7 +43,7 @@ export default function Page({ params }) {
     // set in all submit forms functions (where we want the data refetched)
     const [triggerFetch, setTriggerFetch] = useState(false);
 
-    // post useState
+    // post useStates
     const [postPicture, setPostPicture] = useState(null);
     const [postCaption, setPostCaption] = useState("");
 
