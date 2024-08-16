@@ -66,7 +66,6 @@ export default function Page({ params }) {
                 setLeftSide("ownPage");
             }
             setData(result.data);
-            console.log(result); // set useState variable to data on success
 
             // now fetch profile picture
             const res2 = await fetch(
@@ -78,10 +77,18 @@ export default function Page({ params }) {
                 }
             );
             const result2 = await res2.json();
-            console.log(result2);
             if (res2.status === 200) {
                 setProfilePicUrl(result2.signedUrl);
             } // else we leave it null
+
+            // now we fetch the posts
+            const res3 = await fetch(`/api/posts/get/${params.username}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+            });
+            const result3 = await res3.json();
+            console.log(result3);
         };
 
         try {
