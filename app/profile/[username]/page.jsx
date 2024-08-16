@@ -47,6 +47,9 @@ export default function Page({ params }) {
     const [postPicture, setPostPicture] = useState(null);
     const [postCaption, setPostCaption] = useState("");
 
+    // loading variable for when data is loading
+    const [stillFetching, setStillFetching] = useState(false);
+
     useEffect(() => {
         // fetch data about the user (name, following, etc...)
         const fetchData = async () => {
@@ -93,70 +96,124 @@ export default function Page({ params }) {
         // makes post request to /api/user/messageLog/create, then forwards user to messages page if creation was successful
     };
 
-    const submitPost = async () => {
-        // makes post request to posts api
+    const submitPost = async (e) => {
+        try {
+            // makes post request to posts api
+            e.preventDefault();
+            setStillFetching(true);
+            const formData = new FormData();
+            formData.append("image", postPicture);
+            formData.append("caption", postCaption);
+            const res = await fetch("/api/posts/create", {
+                method: "POST",
+                body: formData,
+                credentials: "include",
+            });
+            const result = await res.json();
+            if (res.status !== 200) {
+                console.log(result.message);
+            }
+            // reset form stuff
+            setNewPostPopup(false);
+            setPostCaption("");
+            setPostPicture(null);
+            // refetch day (ensures that new post is displayed)
+            setTriggerFetch(!triggerFetch);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setStillFetching(false);
+        }
     };
 
     const submitName = async (e) => {
-        e.preventDefault();
-        const res = await fetch("/api/user/name", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ first: first, last: last }),
-            credentials: "include",
-        });
-        const result = await res.json();
-        if (res.status !== 200) {
-            console.log(result.message);
+        try {
+            e.preventDefault();
+            setStillFetching(true);
+            const res = await fetch("/api/user/name", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ first: first, last: last }),
+                credentials: "include",
+            });
+            const result = await res.json();
+            if (res.status !== 200) {
+                console.log(result.message);
+            }
+            setChangeName(false);
+            setTriggerFetch(!triggerFetch);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setStillFetching(false);
         }
-        setChangeName(false);
-        setTriggerFetch(!triggerFetch);
     };
 
     const submitBio = async (e) => {
-        e.preventDefault();
-        const res = await fetch("/api/user/bio", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bio: bio }),
-            credentials: "include",
-        });
-        const result = await res.json();
-        if (res.status !== 200) {
-            console.log(result.message);
+        try {
+            e.preventDefault();
+            setStillFetching(true);
+            const res = await fetch("/api/user/bio", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bio: bio }),
+                credentials: "include",
+            });
+            const result = await res.json();
+            if (res.status !== 200) {
+                console.log(result.message);
+            }
+            setChangeBio(false);
+            setTriggerFetch(!triggerFetch);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setStillFetching(false);
         }
-        setChangeBio(false);
-        setTriggerFetch(!triggerFetch);
     };
 
     const submitProfilePicture = async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append("image", profilePicture);
-        const res = await fetch("/api/user/profilePicture", {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-        });
-        const result = await res.json();
-        if (res.status !== 200) {
-            console.log(result.message);
+        try {
+            e.preventDefault();
+            setStillFetching(true);
+            const formData = new FormData();
+            formData.append("image", profilePicture);
+            const res = await fetch("/api/user/profilePicture", {
+                method: "POST",
+                body: formData,
+                credentials: "include",
+            });
+            const result = await res.json();
+            if (res.status !== 200) {
+                console.log(result.message);
+            }
+            setChangeProfilePic(false);
+            setTriggerFetch(!triggerFetch);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setStillFetching(true);
         }
-        setChangeProfilePic(false);
-        setTriggerFetch(!triggerFetch);
     };
 
     const removeProfilePicture = async () => {
-        const res = await fetch("/api/user/profilePicture", {
-            method: "DELETE",
-            credentials: "include",
-        });
-        const result = await res.json();
-        if (res.status !== 200) {
-            console.log(result.message);
+        try {
+            setStillFetching(true);
+            const res = await fetch("/api/user/profilePicture", {
+                method: "DELETE",
+                credentials: "include",
+            });
+            const result = await res.json();
+            if (res.status !== 200) {
+                console.log(result.message);
+            }
+            setChangeProfilePic(!changeProfilePic);
+            setTriggerFetch(!triggerFetch);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setStillFetching(false);
         }
-        setChangeProfilePic(!changeProfilePic);
-        setTriggerFetch(!triggerFetch);
     };
 
     if (loading) {
@@ -473,6 +530,11 @@ export default function Page({ params }) {
                                     />
                                 </div>
                             </form>
+                        </div>
+                    )}
+                    {stillFetching && (
+                        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center pointer-events-auto">
+                            <h1>loading...</h1>
                         </div>
                     )}
                 </div>

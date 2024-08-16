@@ -5,7 +5,6 @@ import {
     S3Client,
     PutObjectCommand,
     DeleteObjectCommand,
-    Type,
 } from "@aws-sdk/client-s3";
 
 // aws s3 stuff
