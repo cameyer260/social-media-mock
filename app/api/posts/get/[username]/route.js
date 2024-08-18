@@ -5,8 +5,9 @@ import Post from "../../../../../lib/models/Post.js";
 import User from "../../../../../lib/models/User.js";
 import {
     S3Client,
-    PutObjectCommand,
+    GetObjectCommand
 } from "@aws-sdk/client-s3";
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 // aws s3 stuff
 const s3 = new S3Client({
@@ -41,6 +42,27 @@ export async function GET(req, context) {
         const posts = [];
         const theirPosts = await Post.find({ owner: otherUser._id.toString() });
         console.log(theirPosts);
+        for(const post in theirPosts) {
+            const likes = [];
+            for(const like in post.likes) {
+                const theUser = await User.findById(like);
+                const getParams = {
+                    Bucket: process.env.BUCKET_NAME,
+                    Key: theUser._id.toString(),
+                };
+                const getCommand = new GetObjectCommand(getParams);
+                const signedUrl = await getSignedUrl(s3, getCommand, {
+                    expiresIn: 3600 * 24,
+                });
+                likes.push({
+                    username: theUser.username,
+                    signedUrl: signedUrl,
+                });
+            }
+            for(const dislike in post.dislikes) {
+                
+            }
+        }
 
         return new Response(JSON.stringify({ message: "Success." }), {
             headers: {
@@ -61,7 +83,7 @@ export async function GET(req, context) {
                 status: 404,
             });
         }
-        
+
         return new Response(JSON.stringify({ message: "Internal server error" }), {
             headers: {
                 "Content-Type": "application/json",

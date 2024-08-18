@@ -199,7 +199,7 @@ export default function Page({ params }) {
         } catch (error) {
             console.log(error);
         } finally {
-            setStillFetching(true);
+            setStillFetching(false);
         }
     };
 
