@@ -41,8 +41,7 @@ export async function GET(req, context) {
         // the posts will then be sorted from most recent to least recent
         const posts = [];
         const theirPosts = await Post.find({ owner: otherUser._id.toString() });
-        console.log(theirPosts);
-        for(const post in theirPosts) {
+        for(const post of theirPosts) {
             // first get likes
             const likes = [];
             for(const like in post.likes) {
@@ -84,19 +83,19 @@ export async function GET(req, context) {
                 // get subcomments
                 const subComments = [];
                 for(const subComment in comment.comments) {
-                    const theUser = await User.findById(subComment.from);
+                    const subUser = await User.findById(subComment.from);
                     const getParams = {
                         Bucket: process.env.BUCKET_NAME,
-                        Key: theUser._id.toString(),
+                        Key: subUser._id.toString(),
                     };
                     const getCommand = new GetObjectCommand(getParams);
                     const signedUrl = await getSignedUrl(s3, getCommand, {
                         expiresIn: 3600 * 24,
                     });
                     subComments.push({
-                        from: theUser.username,
+                        from: subUser.username,
                         text: subComment.text,
-                        data: subComment.data,
+                        date: subComment.date,
                     });
                 }
                 theComment = {
@@ -107,6 +106,7 @@ export async function GET(req, context) {
                 }
                 comments.push(theComment);
             }
+            // then profile picture
             let signedUrl = null;
             if(post.hasPicture) {
                 const getParams = {
@@ -118,6 +118,7 @@ export async function GET(req, context) {
                     expiresIn: 3600 * 24,
                 });
             }
+            // then add the post to our posts array
             posts.push({
                 owner: otherUser.username,
                 caption: post.caption,

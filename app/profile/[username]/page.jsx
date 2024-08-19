@@ -43,12 +43,15 @@ export default function Page({ params }) {
     // set in all submit forms functions (where we want the data refetched)
     const [triggerFetch, setTriggerFetch] = useState(false);
 
-    // post useStates
+    // uploading a new post useStates
     const [postPicture, setPostPicture] = useState(null);
     const [postCaption, setPostCaption] = useState("");
 
     // loading variable for when data is loading
     const [stillFetching, setStillFetching] = useState(false);
+
+    // user's posts held in an array
+    const [posts, setPosts] = useState(null);
 
     useEffect(() => {
         // fetch data about the user (name, following, etc...)
@@ -79,7 +82,9 @@ export default function Page({ params }) {
             const result2 = await res2.json();
             if (res2.status === 200) {
                 setProfilePicUrl(result2.signedUrl);
-            } // else we leave it null
+            } else {
+                setProfilePicUrl(null);
+            }
 
             // now we fetch the posts
             const res3 = await fetch(`/api/posts/get/${params.username}`, {
@@ -88,7 +93,7 @@ export default function Page({ params }) {
                 credentials: "include",
             });
             const result3 = await res3.json();
-            console.log(result3);
+            setPosts(result3.posts);
         };
 
         try {
@@ -446,9 +451,21 @@ export default function Page({ params }) {
                             )}
                         </div>
                     </div>
-                    <div>
-                        <h1>DIV HOLDING ALL THE POSTS</h1>
-                        <div>POST NUMBER 1</div>
+                    <div className="h-screen w-screen">
+                        {posts && posts.map((post) => (
+                            <div className="flex flex-col border-white border-2">
+                                {post.pictureLink && (
+                                    <Image 
+                                        src={post.pictureLink}
+                                        alt="picture"
+                                        height={75}
+                                        width={75}
+                                        className=""
+                                    />
+                                )}
+                                <h1>{post.caption}</h1>
+                            </div>
+                        ))}
                     </div>
                     {changeProfilePic && (
                         <div className="absolute bg-black w-1/3 h-1/4 border-2 border-white rounded-lg top-1/3">
@@ -556,6 +573,8 @@ export default function Page({ params }) {
                                         alt="profile-pic"
                                         height={75}
                                         width={75}
+                                        className="object-cover rounded-full w-20 h-20"
+                                        onError={() => setProfilePicUrl(null)}
                                     ></Image>
                                 ) : (
                                     <WhiteProfileIcon />
