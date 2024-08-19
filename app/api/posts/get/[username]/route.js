@@ -43,6 +43,7 @@ export async function GET(req, context) {
         const theirPosts = await Post.find({ owner: otherUser._id.toString() });
         console.log(theirPosts);
         for(const post in theirPosts) {
+            // first get likes
             const likes = [];
             for(const like in post.likes) {
                 const theUser = await User.findById(like);
@@ -59,12 +60,76 @@ export async function GET(req, context) {
                     signedUrl: signedUrl,
                 });
             }
+            // then dislikes
+            const dislikes = [];
             for(const dislike in post.dislikes) {
-                
+                const theUser = await User.findById(dislike);
+                const getParams = {
+                    Bucket: process.env.BUCKET_NAME,
+                    Key: theUser._id.toString(),
+                };
+                const getCommand = new GetObjectCommand(getParams);
+                const signedUrl = await getSignedUrl(s3, getCommand, {
+                    expiresIn: 3600 * 24,
+                });
+                dislikes.push({
+                    username: theUser.username,
+                    signedUrl: signedUrl,
+                });
             }
+            // then comments
+            const comments = [];
+            for(const comment in post.comments) {
+                const theUser = await User.findById(comment.from); // get username from _id
+                // get subcomments
+                const subComments = [];
+                for(const subComment in comment.comments) {
+                    const theUser = await User.findById(subComment.from);
+                    const getParams = {
+                        Bucket: process.env.BUCKET_NAME,
+                        Key: theUser._id.toString(),
+                    };
+                    const getCommand = new GetObjectCommand(getParams);
+                    const signedUrl = await getSignedUrl(s3, getCommand, {
+                        expiresIn: 3600 * 24,
+                    });
+                    subComments.push({
+                        from: theUser.username,
+                        text: subComment.text,
+                        data: subComment.data,
+                    });
+                }
+                theComment = {
+                    from: theUser.username,
+                    text: comment.text,
+                    comments: subComments,
+                    date: comment.date,
+                }
+                comments.push(theComment);
+            }
+            let signedUrl = null;
+            if(post.hasPicture) {
+                const getParams = {
+                    Bucket: process.env.BUCKET_NAME,
+                    Key: post._id.toString(),
+                };
+                const getCommand = new GetObjectCommand(getParams);
+                signedUrl = await getSignedUrl(s3, getCommand, {
+                    expiresIn: 3600 * 24,
+                });
+            }
+            posts.push({
+                owner: otherUser.username,
+                caption: post.caption,
+                comments: comments,
+                likes: likes,
+                dislikes: dislikes,
+                date: post.date,
+                pictureLink: signedUrl,
+            });
         }
 
-        return new Response(JSON.stringify({ message: "Success." }), {
+        return new Response(JSON.stringify({ message: "Success.", posts: posts }), {
             headers: {
                 "Content-Type": "application/json",
             },
